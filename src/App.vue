@@ -69,6 +69,8 @@
               <div
                 v-for="t in tickers"
                 :key="t.name"
+                @click="selected=t"
+                :class="{'border-4': selected===t}"
                 class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
               >
                 <div class="px-4 py-5 sm:p-6 text-center">
@@ -81,7 +83,7 @@
                 </div>
                 <div class="w-full border-t border-gray-200"></div>
                 <button
-                  @click="handleDelete(t)"
+                  @click.stop="handleDelete(t)"
                   class="flex items-center justify-center font-medium w-full bg-gray-100 px-4 py-4 sm:px-6 text-md text-gray-500 hover:text-gray-600 hover:bg-gray-200 hover:opacity-20 transition-all focus:outline-none"
                 >
                   <svg
@@ -101,9 +103,9 @@
             </dl>
             <hr class="w-full border-t border-gray-600 my-4" />
           </template>
-        <!-- <section class="relative">
+        <section v-if="selected" class="relative">
           <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
-            VUE - USD
+            {{ selected.name }} - USD
           </h3>
           <div class="flex items-end border-gray-600 border-b border-l h-64">
             <div
@@ -120,6 +122,7 @@
             ></div>
           </div>
           <button
+            @click="selected=null"
             type="button"
             class="absolute top-0 right-0"
           >
@@ -145,7 +148,7 @@
               </g>
             </svg>
           </button>
-        </section> -->
+        </section>
       </div>
     </div>
 </template>
@@ -157,10 +160,11 @@ export default {
     return {
       ticker:"default",
       tickers: [
-        { name: 'DEMO', price: '-' },
-        { name: 'DEMO', price: '-' },
-        { name: 'DEMO', price: '-' }
-      ]
+        { name: 'DEMO1', price: '10' },
+        { name: 'DEMO2', price: '20' },
+        { name: 'DEMO3', price: '30' }
+      ],
+      selected: null,
     }
   },
   methods: {
