@@ -1,6 +1,6 @@
 # cryptonomicon
 
-This is a Vue 3 project built with using Tailwind.
+This is a Vue 3 project built using Tailwind.
 
 You can add crypto name, which will then be displayed as a card with its name and the price.
 
