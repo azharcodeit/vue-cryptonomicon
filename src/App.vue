@@ -23,21 +23,14 @@
                   placeholder="Например DOGE"
                 />
               </div>
-              <!-- <div class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
-                <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-                  BTC
-                </span>
-                <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-                  DOGE
-                </span>
-                <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-                  BCH
-                </span>
-                <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-                  CHD
+                <div
+                  class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap"
+                >
+                <span v-for="t in suggestedTickers" :key="t.name" @click="ticker = t" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
+                  {{t}}
                 </span>
               </div>
-              <div class="text-sm text-red-600">Такой тикер уже добавлен</div> -->
+              <div class="text-sm text-red-600" :class="{'hidden': tickerExists===false}">Такой тикер уже добавлен</div>
             </div>
           </div>
           <button
@@ -157,9 +150,12 @@ export default {
       tickers: [
       ],
       selected: null,
-      graph: []
+      graph: [],
+      tickerExists: false,
+      suggestedTickers: ['btc', 'DOGE']
     }
   },
+
   methods: {
     add() {
       const currentTicker = {
@@ -167,14 +163,19 @@ export default {
         price: "-"
       };
 
-      this.tickers.push(currentTicker);
+      if (this.tickers.find(t => t.name === currentTicker.name)) {
+        this.tickerExists = true;
+      } else {
+        this.tickers.push(currentTicker);
+        this.tickerExists = false;
+      }
+
       setInterval(async () => {
         const f = await fetch(
           `https://min-api.cryptocompare.com/data/price?fsym=${currentTicker.name}&tsyms=USD&api_key=bf96ce02f13a17a4f895396861f32fe29372a21ebd7e9fd16d130b90a3ad0546`
         );
         const data = await f.json();
 
-        // currentTicker.price =  data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
         this.tickers.find(t => t.name === currentTicker.name).price =
           data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
 
