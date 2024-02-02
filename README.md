@@ -1,12 +1,7 @@
 # cryptonomicon
 
-This is a Vue 3 project built using Tailwind.
-
-You can add crypto name, which will then be displayed as a card with its name and the price.
-
-If you click on card it will show a dynamic graph of 5 sec interval of new price for a crypto under the cards list.
-
-It is a practice project, that will gradually be progressing!
+This repository is a component of an online course designed for incremental code improvement to uncover potential bugs. 
+Please be aware that the code may not be optimal initially. 
 
 ## Project setup
 
