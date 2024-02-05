@@ -71,7 +71,7 @@
             <hr class="w-full border-t border-gray-600 my-4" />
             <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
               <div
-                v-for="t in filteredTickers()"
+                v-for="t in paginatedTickers"
                 :key="t.name"
                 @click="selected=t"
                 :class="{'border-4': selected===t}"
@@ -113,7 +113,7 @@
           </h3>
           <div class="flex items-end border-gray-600 border-b border-l h-64">
             <div
-              v-for="(bar, idx) in normalizeGraph()"
+              v-for="(bar, idx) in normalizeGraph"
               :key="idx"
               :style="{ height: `${bar}%` }"
               class="bg-purple-800 border w-10"
@@ -154,23 +154,23 @@
 
 <script>
 export default {
-  // [x] 6. Наличие в состоянии ЗАВИСИМЫХ ДАННЫХ | Критичность: 5+
+  // [ ] 6. Наличие в состоянии ЗАВИСИМЫХ ДАННЫХ | Критичность: 5+
   // [ ] 4. Запросы напрямую внутри компонента (???) | Критичность: 5
   // [ ] 2. При удалении остается подписка на загрузку тикера | Критичность: 5
   // [ ] 5. Обработка ошибок API | Критичность: 5
   // [ ] 3. Количество запросов | Критичность: 4
-  // [x] 8. При удалении тикера не изменяется localStorage | Критичность: 4
-  // [x] 1. Одинаковый код в watch | Критичность: 3
+  // [ ] 8. При удалении тикера не изменяется localStorage | Критичность: 4
+  // [ ] 1. Одинаковый код в watch | Критичность: 3
   // [ ] 9. localStorage и анонимные вкладки | Критичность: 3
   // [ ] 7. График ужасно выглядит если будет много цен | Критичность: 2
   // [ ] 10. Магические строки и числа (URL, 5000 миллисекунд задержки, ключ локал стораджа, количество на странице) |  Критичность: 1
 
   // Параллельно
-  // [x] График сломан если везде одинаковые значения
-  // [x] При удалении тикера остается выбор
+  // [ ] График сломан если везде одинаковые значения
+  // [ ] При удалении тикера остается выбор
 
   name: "App",
-  data () {
+  data () { //Data can not include fields that can be computed
     return {
       ticker:"",
       tickers: [
@@ -181,7 +181,6 @@ export default {
       suggestedTickers: ['btc', 'DOGE'],
       page:1,
       filter:"",
-      hasNextPage: true
     }
   },
 
@@ -208,15 +207,35 @@ export default {
     }
   },
 
+  computed:{ // computed stores fields 
+    startIndex(){
+      return (this.page - 1) * 6
+    },
+    endIndex(){
+      return this.page * 6
+    },
+    filteredTickers() {
+      return this.tickers.filter(ticker => ticker.name.includes(this.filter))
+    },
+    paginatedTickers(){
+      return this.filteredTickers.slice(this.startIndex, this.endIndex)
+    },
+    hasNextPage(){
+      return this.filteredTickers.length > this.endIndex
+    },
+    normalizeGraph() {
+      const maxValue = Math.max(...this.graph);
+      const minValue = Math.min(...this.graph);
+      if(maxValue===minValue){
+        return this.graph.map(()=>50)
+      }
+      return this?.graph?.map(
+        price => 5 + ((price - minValue) * 95) / (maxValue - minValue)
+      );
+    }
+  },
 
   methods: {
-    filteredTickers() {
-      const start = (this.page - 1) * 6
-      const end = this.page * 6
-      const filteredTickers = this.tickers.filter(ticker => ticker.name.includes(this.filter))
-      this.hasNextPage = filteredTickers.length > end
-      return filteredTickers.slice(start, end)
-    },
     subscribeToUpdates(tickerName) {
       setInterval(async () => {
         const f = await fetch(
@@ -257,13 +276,6 @@ export default {
     },
     handleDelete(tickerToDelete){
       this.tickers = this.tickers.filter(t=>t!= tickerToDelete)
-    },
-    normalizeGraph() {
-      const maxValue = Math.max(...this.graph);
-      const minValue = Math.min(...this.graph);
-      return this?.graph?.map(
-        price => 5 + ((price - minValue) * 95) / (maxValue - minValue)
-      );
     }
 
   },
@@ -274,6 +286,11 @@ export default {
     },
     page() {
       window.history.pushState(null, document.title, `${window.location.pathname}?filter=${this.filter}&page=${this.page}`)
+    },
+    paginatedTickers(){
+       if (this.paginatedTickers.length === 0 && this.page > 1) {
+        this.page -= 1
+      }
     }
   }
 };
