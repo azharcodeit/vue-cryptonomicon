@@ -73,8 +73,8 @@
               <div
                 v-for="t in paginatedTickers"
                 :key="t.name"
-                @click="selected=t"
-                :class="{'border-4': selected===t}"
+                @click="selectedTicker=t"
+                :class="{'border-4': selectedTicker===t}"
                 class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
               >
                 <div class="px-4 py-5 sm:p-6 text-center">
@@ -107,9 +107,9 @@
             </dl>
             <hr class="w-full border-t border-gray-600 my-4" />
           </template>
-        <section v-if="selected" class="relative">
+        <section v-if="selectedTicker" class="relative">
           <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
-            {{ selected.name }} - USD
+            {{ selectedTicker.name }} - USD
           </h3>
           <div class="flex items-end border-gray-600 border-b border-l h-64">
             <div
@@ -121,7 +121,7 @@
 
           </div>
           <button
-            @click="selected=null"
+            @click="selectedTicker=null"
             type="button"
             class="absolute top-0 right-0"
           >
@@ -175,7 +175,7 @@ export default {
       ticker:"",
       tickers: [
       ],
-      selected: null,
+      selectedTicker: null,
       graph: [],
       tickerExists: false,
       suggestedTickers: ['btc', 'DOGE'],
@@ -223,16 +223,26 @@ export default {
     hasNextPage(){
       return this.filteredTickers.length > this.endIndex
     },
-    normalizeGraph() {
+    normalizedGraph() {
       const maxValue = Math.max(...this.graph);
       const minValue = Math.min(...this.graph);
-      if(maxValue===minValue){
-        return this.graph.map(()=>50)
+
+      if (maxValue === minValue) {
+        return this.graph.map(() => 50);
       }
-      return this?.graph?.map(
+
+      return this.graph.map(
         price => 5 + ((price - minValue) * 95) / (maxValue - minValue)
       );
+    },
+
+    pageStateOptions() {
+      return {
+        filter: this.filter,
+        page: this.page
+      };
     }
+
   },
 
   methods: {
@@ -245,7 +255,7 @@ export default {
 
         this.tickers.find(t => t?.name === tickerName).price =
           data?.USD > 1 ? data?.USD.toFixed(2) : data?.USD?.toPrecision(2);
-        if (this.selected?.name === tickerName) {
+        if (this.selectedTicker?.name === tickerName) {
           this.graph.push(data?.USD);
         }
       }, 3000);
@@ -271,26 +281,44 @@ export default {
     },
 
     select(ticker) {
-      this.selected = ticker;
+      this.selectedTicker = ticker;
       this.graph = [];
     },
     handleDelete(tickerToDelete){
       this.tickers = this.tickers.filter(t=>t!= tickerToDelete)
+      if(this.selectedTicker ===tickerToDelete){
+        this.selectedTicker =null
+      }
     }
 
   },
-  watch: {
-    filter() {
-      this.page=1;
-      window.history.pushState(null, document.title, `${window.location.pathname}?filter=${this.filter}&page=${this.page}`)
+   watch: {
+    selectedTicker() {
+      this.graph = [];
     },
-    page() {
-      window.history.pushState(null, document.title, `${window.location.pathname}?filter=${this.filter}&page=${this.page}`)
+
+    tickers(newValue, oldValue) {
+      // Почему не сработал watch при добавлении?
+      console.log(newValue === oldValue);
+      localStorage.setItem("cryptonomicon-list", JSON.stringify(this.tickers));
     },
-    paginatedTickers(){
-       if (this.paginatedTickers.length === 0 && this.page > 1) {
-        this.page -= 1
+
+    paginatedTickers() {
+      if (this.paginatedTickers.length === 0 && this.page > 1) {
+        this.page -= 1;
       }
+    },
+
+    filter() {
+      this.page = 1;
+    },
+
+    pageStateOptions(value) {
+      window.history.pushState(
+        null,
+        document.title,
+        `${window.location.pathname}?filter=${value.filter}&page=${value.page}`
+      );
     }
   }
 };
